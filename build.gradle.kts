@@ -33,11 +33,15 @@ dependencies {
 
 	implementation("com.h2database:h2")
 
+	implementation("io.springfox:springfox-swagger2:2.9.2")
+	implementation("io.springfox:springfox-swagger-ui:2.9.2")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
 	testImplementation("org.assertj:assertj-core:3.16.1")
+	testImplementation("com.natpryce:make-it-easy:4.0.1")
+
 }
 
 tasks.withType<Test> {

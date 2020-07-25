@@ -1,0 +1,3 @@
+
+#comment out this line in a production environment, to disable swagger
+spring.profiles.active: development

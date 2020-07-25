@@ -24,21 +24,13 @@
         </createTable>
 
         <addPrimaryKey tableName="user_t" columnNames="id"/>
-    </changeSet>
 
-    <changeSet id="create_index_nickname" author="michele" failOnError="true">
+        <addUniqueConstraint
+                tableName="user_t"
+                columnNames="nickname"
+                constraintName="user_t_uc_nickname"
+        />
 
-        <preConditions onFail="MARK_RAN" onError="CONTINUE">
-            <tableExists tableName="user_t"/>
-            <columnExists tableName="user_t" columnName="nickname"/>
-            <not>
-                <indexExists tableName="user_t" indexName="user_t_idx_1"/>
-            </not>
-        </preConditions>
-
-        <createIndex tableName="user_t" indexName="user_t_idx_1">
-            <column name="nickname"/>
-        </createIndex>
     </changeSet>
 
 

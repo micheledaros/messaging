@@ -1,6 +1,6 @@
 package com.micheledaros.messaging.user.rest
 
-import com.micheledaros.messaging.user.domain.UserAlreadyExistException
+import com.micheledaros.messaging.user.domain.exception.UserAlreadyExistsException
 import com.micheledaros.messaging.user.domain.UserMaker
 import com.micheledaros.messaging.user.domain.UserMaker.DEFAULT_USER
 import com.micheledaros.messaging.user.domain.UserService
@@ -9,7 +9,6 @@ import com.natpryce.makeiteasy.MakeItEasy.a
 import com.natpryce.makeiteasy.MakeItEasy.make
 import com.natpryce.makeiteasy.MakeItEasy.with
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -49,7 +48,7 @@ internal class UserEndpointTest {
         val userDto = make(a(DEFAULT_USERDTO, with(UserDtoMaker.NICKNAME, nickName)))
         doReturn(userDto).`when`(userConverter).toDto(user)
 
-        val userErrorDto = userEndpoint.handleUserAlreadyExistException(UserAlreadyExistException(user))
+        val userErrorDto = userEndpoint.handleUserAlreadyExistException(UserAlreadyExistsException(user))
 
         assertThat(userErrorDto).isEqualTo(
                 UserErrorDto(

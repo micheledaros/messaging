@@ -1,6 +1,6 @@
 package com.micheledaros.messaging.user.rest
 
-import com.micheledaros.messaging.user.domain.UserAlreadyExistException
+import com.micheledaros.messaging.user.domain.exception.UserAlreadyExistsException
 import com.micheledaros.messaging.user.domain.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -29,9 +29,9 @@ class UserEndpoint (
         return userConverter.toDto(user)
     }
 
-    @ExceptionHandler(UserAlreadyExistException::class)
+    @ExceptionHandler(UserAlreadyExistsException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun handleUserAlreadyExistException(exception: UserAlreadyExistException) : UserErrorDto{
+    fun handleUserAlreadyExistException(exception: UserAlreadyExistsException) : UserErrorDto{
         val existingUser = userConverter.toDto(exception.user)
         return UserErrorDto(
                 message = "an user with the same nickname is already existing",

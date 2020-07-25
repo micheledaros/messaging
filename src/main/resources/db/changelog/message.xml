@@ -15,7 +15,10 @@
         </preConditions>
 
         <createTable tableName="message_t">
-            <column name="id" type="VARCHAR(32)">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="VARCHAR(4096)">
                 <constraints nullable="false"/>
             </column>
             <column name="sender_id" type="VARCHAR(32)">
@@ -24,10 +27,12 @@
             <column name="receiver_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
             </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
 
         <addPrimaryKey tableName="message_t" columnNames="id"/>
-
 
         <addForeignKeyConstraint constraintName="message_t_fk_sender_id"
                                  baseTableName="message_t"  baseColumnNames="sender_id"

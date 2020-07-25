@@ -2,6 +2,7 @@ package com.micheledaros.messaging.user.domain
 
 import com.micheledaros.messaging.configuration.anyObject
 import com.micheledaros.messaging.user.domain.UserMaker.DEFAULT_USER
+import com.micheledaros.messaging.user.domain.exception.UserAlreadyExistsException
 import com.natpryce.makeiteasy.MakeItEasy.a
 import com.natpryce.makeiteasy.MakeItEasy.make
 import org.assertj.core.api.Assertions.assertThat
@@ -46,10 +47,11 @@ internal class UserServiceTest {
 
     @Test
     fun `createUser throws an exception an does not create an user if an user with the same nickname is already present` (){
-        doReturn(make(a(DEFAULT_USER))).`when`(userRepository).findByNickName(NICKNAME)
+        val existingUser = make(a(DEFAULT_USER))
+        doReturn(existingUser).`when`(userRepository).findByNickName(NICKNAME)
 
         assertThatThrownBy{userService.createUser(NICKNAME)}
-                .isInstanceOf(UserAlreadyExistException::class.java)
+                .isEqualToComparingFieldByField(UserAlreadyExistsException(existingUser))
 
         verify(userRepository, times(0)).save(anyObject())
     }

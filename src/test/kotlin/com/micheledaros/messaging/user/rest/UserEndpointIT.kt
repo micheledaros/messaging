@@ -1,18 +1,15 @@
 package com.micheledaros.messaging.user.rest
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.micheledaros.messaging.user.domain.UserAlreadyExistException
+import com.micheledaros.messaging.user.domain.exception.UserAlreadyExistsException
 import com.micheledaros.messaging.user.domain.UserMaker.DEFAULT_USER
-import com.micheledaros.messaging.user.domain.UserMaker.NICKNAME
 import com.micheledaros.messaging.user.domain.UserService
 import com.natpryce.makeiteasy.MakeItEasy.a
 import com.natpryce.makeiteasy.MakeItEasy.make
-import com.natpryce.makeiteasy.MakeItEasy.with
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
-import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -56,7 +53,7 @@ internal class UserEndpointIT (
     @Test
     fun `posting to users with the nickname of an already existing user returns status code 400`() {
         val nickName = "nick"
-        doThrow(UserAlreadyExistException(make(a(DEFAULT_USER)))).`when`(userService).createUser(nickName)
+        doThrow(UserAlreadyExistsException(make(a(DEFAULT_USER)))).`when`(userService).createUser(nickName)
 
         val result = mockMvc.perform(
                 MockMvcRequestBuilders

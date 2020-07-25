@@ -10,7 +10,7 @@ import javax.persistence.UniqueConstraint
 
 @Entity
 @Table(name = "user_t")
-class User(
+data class User(
         @Column(name = "id", length = 32)
         @Id
         val id: String = generateId(),

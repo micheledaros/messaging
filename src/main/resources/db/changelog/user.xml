@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+
+    <changeSet id="create_table_user" author="michele" failOnError="true">
+
+        <preConditions onFail="MARK_RAN" onError="CONTINUE">
+            <not>
+                <tableExists tableName="user_t"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="user_t">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nickname" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_t" columnNames="id"/>
+    </changeSet>
+
+    <changeSet id="create_index_nickname" author="michele" failOnError="true">
+
+        <preConditions onFail="MARK_RAN" onError="CONTINUE">
+            <tableExists tableName="user_t"/>
+            <columnExists tableName="user_t" columnName="nickname"/>
+            <not>
+                <indexExists tableName="user_t" indexName="user_t_idx_1"/>
+            </not>
+        </preConditions>
+
+        <createIndex tableName="user_t" indexName="user_t_idx_1">
+            <column name="nickname"/>
+        </createIndex>
+    </changeSet>
+
+
+</databaseChangeLog>

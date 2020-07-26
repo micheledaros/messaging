@@ -1,6 +1,7 @@
 package com.micheledaros.messaging.message.domain
 
 import com.micheledaros.messaging.message.domain.MessageMaker.DEFAULT_MESSAGE
+import com.micheledaros.messaging.message.domain.exception.ReceiverIsSameAsSenderException
 import com.micheledaros.messaging.user.domain.User
 import com.micheledaros.messaging.user.domain.UserMaker.DEFAULT_USER
 import com.micheledaros.messaging.user.domain.UserMaker.ID
@@ -10,6 +11,7 @@ import com.natpryce.makeiteasy.MakeItEasy.a
 import com.natpryce.makeiteasy.MakeItEasy.make
 import com.natpryce.makeiteasy.MakeItEasy.with
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.AdditionalAnswers
@@ -19,10 +21,10 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.data.domain.PageRequest
 import java.util.Date
-import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 internal class MessageServiceTest {
@@ -49,6 +51,8 @@ internal class MessageServiceTest {
         private val otherUser = make(a(DEFAULT_USER,
                 with (ID, otherUserId), with(NICKNAME, "receiver")))
 
+        private val message = make(a(DEFAULT_MESSAGE))
+
     }
 
     @Test
@@ -70,29 +74,101 @@ internal class MessageServiceTest {
                         otherUser,
                         currentTime
                 ))
-
     }
 
-
     @Test
-    fun `getReceivedMessages returns the correct messages` () {
-
+    fun `sendMessage to self throws an exception`() {
         doReturn(currentUser).`when`(userService).loadCurrentUser()
 
-        val message = make(a(DEFAULT_MESSAGE))
+        assertThatThrownBy { messageService.sendMessage(text, currentUserId) }
+                .isInstanceOf(ReceiverIsSameAsSenderException::class.java)
+        verifyNoInteractions(messageRepository)
+    }
 
+    @Test
+    fun `loadInboundMessages returns the correct messages` () {
+        doReturn(currentUser).`when`(userService).loadCurrentUser()
         val startingId: Long = 2
         val limit = 3
 
         doReturn(listOf(message))
                 .`when`(messageRepository)
-                .findAllByReceiverAndIdIsGreaterThanEqualOrderById(currentUser, startingId, PageRequest.of(0, limit))
+                .findAllByReceiverAndIdIsGreaterThanOrderById(currentUser, startingId, PageRequest.of(0, limit))
 
-        val receivedMessages = messageService.getReceivedMessages(startingId, limit)
+        val receivedMessages = messageService.loadInboundMessages(startingId, limit)
+
+        assertThat(receivedMessages).containsExactly(message)
+    }
+
+    @Test
+    fun `loadInboundMessages has the right default parameters` () {
+        doReturn(currentUser).`when`(userService).loadCurrentUser()
+
+        messageService.loadInboundMessages()
+
+        verify(messageRepository)
+                .findAllByReceiverAndIdIsGreaterThanOrderById(currentUser, -1, PageRequest.of(0, 50))
+    }
+
+    @Test
+    fun `loadInboundMessagesFromSender returns the correct messages` () {
+        doReturn(currentUser).`when`(userService).loadCurrentUser()
+        doReturn(otherUser).`when`(userService).loadUser(otherUserId)
+        val startingId: Long = 2
+        val limit = 3
+
+        doReturn(listOf(message))
+                .`when`(messageRepository)
+                .findAllByReceiverAndSenderAndIdIsGreaterThanOrderById(currentUser, otherUser, startingId, PageRequest.of(0, limit))
+
+        val receivedMessages = messageService.loadInboundMessagesFromSender(otherUserId, startingId, limit)
 
         assertThat(receivedMessages).containsExactly(message)
     }
 
 
+    @Test
+    fun `loadInboundMessagesFromSender from self throws an exception` () {
+        doReturn(currentUser).`when`(userService).loadCurrentUser()
+
+        assertThatThrownBy { messageService.loadInboundMessagesFromSender(currentUserId) }
+                .isInstanceOf(ReceiverIsSameAsSenderException::class.java)
+    }
+
+    @Test
+    fun `loadInboundMessagesFromSender has the right default parameters` () {
+        doReturn(currentUser).`when`(userService).loadCurrentUser()
+        doReturn(otherUser).`when`(userService).loadUser(otherUserId)
+
+        messageService.loadInboundMessagesFromSender(otherUserId)
+
+        verify(messageRepository)
+                .findAllByReceiverAndSenderAndIdIsGreaterThanOrderById(currentUser, otherUser, -1, PageRequest.of(0, 50))
+    }
+
+    @Test
+    fun `loadOutboundMessages returns the correct messages` () {
+        doReturn(currentUser).`when`(userService).loadCurrentUser()
+        val startingId: Long = 2
+        val limit = 3
+
+        doReturn(listOf(message))
+                 .`when`(messageRepository)
+                .findAllBySenderAndIdIsGreaterThanOrderById(currentUser, startingId, PageRequest.of(0, limit))
+
+        val receivedMessages = messageService.loadOutboundMessages(startingId, limit)
+
+        assertThat(receivedMessages).containsExactly(message)
+    }
+
+    @Test
+    fun `loadOutboundMessages has the right default parameters` () {
+        doReturn(currentUser).`when`(userService).loadCurrentUser()
+
+        messageService.loadOutboundMessages()
+
+        verify(messageRepository)
+                .findAllBySenderAndIdIsGreaterThanOrderById(currentUser, -1, PageRequest.of(0, 50))
+    }
 
 }

@@ -39,12 +39,38 @@ class MessageService (
         )
     }
 
-    fun getReceivedMessages(startingId:Long=0, limit:Int=50) : List<Message>{
+    fun loadInboundMessages(startingId:Long=-1, limit:Int=50) : List<Message>{
         val currentUser = userService.loadCurrentUser()
-        return  messageRepository.findAllByReceiverAndIdIsGreaterThanEqualOrderById(
+        return  messageRepository.findAllByReceiverAndIdIsGreaterThanOrderById(
                currentUser,
                startingId,
                PageRequest.of(0,limit)
+        )
+    }
+
+    fun loadInboundMessagesFromSender(senderId: String, startingId:Long=-1, limit:Int=50) : List<Message>{
+        val currentUser = userService.loadCurrentUser()
+
+        if (currentUser.id == senderId) {
+            throw ReceiverIsSameAsSenderException()
+        }
+
+        val sender: User = userService.loadUser(senderId)
+
+        return  messageRepository.findAllByReceiverAndSenderAndIdIsGreaterThanOrderById(
+                receiver = currentUser,
+                sender = sender,
+                startingId = startingId,
+                pageable = PageRequest.of(0,limit)
+        )
+    }
+
+    fun loadOutboundMessages(startingId:Long=-1, limit:Int=50) : List<Message> {
+        val currentUser = userService.loadCurrentUser()
+        return  messageRepository.findAllBySenderAndIdIsGreaterThanOrderById(
+                currentUser,
+                startingId,
+                PageRequest.of(0,limit)
         )
     }
 }

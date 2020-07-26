@@ -7,5 +7,24 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface MessageRepository : CrudRepository <Message, Long> {
-    fun findAllByReceiverAndIdIsGreaterThanEqualOrderById(receiver: User, startingId:Long, pageable: Pageable): List<Message>
+    fun findAllByReceiverAndIdIsGreaterThanOrderById(
+            receiver: User,
+            startingId:Long,
+            pageable: Pageable
+    ): List<Message>
+
+    fun findAllByReceiverAndSenderAndIdIsGreaterThanOrderById(
+            receiver: User,
+            sender: User,
+            startingId:Long,
+            pageable: Pageable
+    ): List<Message>
+
+    fun findAllBySenderAndIdIsGreaterThanOrderById(
+            sender: User,
+            startingId:Long,
+            pageable: Pageable
+    ): List<Message>
+
+
 }

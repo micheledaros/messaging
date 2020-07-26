@@ -2,6 +2,7 @@ package com.micheledaros.messaging.message.domain
 
 import com.micheledaros.messaging.configuration.SpringProfiles
 import com.micheledaros.messaging.message.domain.MessageMaker.DEFAULT_MESSAGE
+import com.micheledaros.messaging.message.domain.MessageMaker.MESSAGE
 import com.micheledaros.messaging.message.domain.MessageMaker.RECEIVER
 import com.micheledaros.messaging.message.domain.MessageMaker.SENDER
 import com.micheledaros.messaging.user.domain.CurrentUserIdProvider
@@ -17,13 +18,19 @@ import com.natpryce.makeiteasy.MakeItEasy.with
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.test.context.ActiveProfiles
 import java.util.Date
+import java.util.stream.Stream
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles(SpringProfiles.LIQUIBASE_OFF)
 @DataJpaTest
 internal class MessageServiceIT {
@@ -44,22 +51,24 @@ internal class MessageServiceIT {
     private lateinit var messageService: MessageService
 
 
+
     companion object {
         private val currentTime = Date(1_595_714_631_751)
         private const val currentUserId = "currentUser_id"
         private const val otherUserId = "otherUserId"
 
+
         private val currentUser = make(a(DEFAULT_USER,
                 with (ID, currentUserId), with(NICKNAME, "currentUser")))
         private val otherUser = make(a(DEFAULT_USER,
-                with (ID, otherUserId), with(NICKNAME, "receiver")))
-
+                with (ID, otherUserId), with(NICKNAME, "otherUser")))
     }
 
     @BeforeEach
     fun persistUsers() {
         userRepository.save(otherUser)
         userRepository.save(currentUser)
+
     }
 
     @Test
@@ -72,46 +81,74 @@ internal class MessageServiceIT {
 
     }
 
-    @Test
-    fun `getReceivedMessages returns the messages`() {
+    @ParameterizedTest
+    @MethodSource("provide arguments for testing limit and starting id")
+    fun `loadInboundMessages returns the right amount of messages based on limit and starting id`(arguments : ArgumentsForTestingLimitAndStartingId) {
+        (1..arguments.totalMessagesCount).forEach{persistMessage("message${it}", otherUser, currentUser)}
 
-        persistMessage(otherUser, currentUser)
+        val startingId = arguments.startingIdProvider.invoke()
+        val receivedMessages = messageService.loadInboundMessages(startingId = startingId, limit = arguments.limit)
 
-        val maxId = messageRepository.findAll().map { it.id }.max()!!
-        val receivedMessages = messageService.getReceivedMessages(startingId = maxId)
+        assertThat(receivedMessages).hasSize(arguments.expectedLoadedMessagesCount)
+    }
 
-        assertThat(receivedMessages).hasSize(1)
+    @ParameterizedTest
+    @MethodSource("provide arguments for testing limit and starting id")
+    fun `loadInboundMessagesFromSender returns the right amount of messages based on limit and starting id`(arguments : ArgumentsForTestingLimitAndStartingId) {
+        (1..arguments.totalMessagesCount).forEach{persistMessage("message${it}", otherUser, currentUser)}
 
+        val startingId = arguments.startingIdProvider.invoke()
+        val receivedMessages = messageService.loadInboundMessagesFromSender(
+                senderId = otherUserId,
+                startingId = startingId,
+                limit = arguments.limit)
+
+        assertThat(receivedMessages).hasSize(arguments.expectedLoadedMessagesCount)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provide arguments for testing limit and starting id")
+    fun `loadOutboundMessages returns the right amount messages based on limit and starting id`(arguments : ArgumentsForTestingLimitAndStartingId) {
+        (1..arguments.totalMessagesCount).forEach{persistMessage("message${it}", currentUser, otherUser)}
+
+        val startingId = arguments.startingIdProvider.invoke()
+        val receivedMessages = messageService.loadOutboundMessages(
+                startingId = startingId,
+                limit = arguments.limit)
+
+        assertThat(receivedMessages).hasSize(arguments.expectedLoadedMessagesCount)
+    }
+
+    private fun `provide arguments for testing limit and starting id`(): Stream<Arguments?>? {
+        return Stream.of(
+                Arguments.of(ArgumentsForTestingLimitAndStartingId(3, {-1}, 3, 3)),
+                Arguments.of(ArgumentsForTestingLimitAndStartingId(3, {-1}, 2, 2)),
+                Arguments.of(ArgumentsForTestingLimitAndStartingId(3, {findMaxId()}, 3, 0)),
+                Arguments.of(ArgumentsForTestingLimitAndStartingId(3, {findMaxId()-1}, 3, 1))
+        )
     }
 
     @Test
-    fun `getReceivedMessages filters correctly by startingId`() {
+    fun `loadInboundMessagesFromSender filters the sender correctly`() {
+        val thirdUserId = "thirdUserId"
+        val thirdUser = make(a(DEFAULT_USER,
+                with (ID, thirdUserId), with(NICKNAME, "third_user")))
+        userRepository.save(thirdUser)
+        persistMessage("message1}", otherUser, currentUser)
 
-        persistMessage(otherUser, currentUser)
-
-        val maxId = messageRepository.findAll().map { it.id }.max()!!
-
-        val receivedMessages = messageService.getReceivedMessages(startingId = maxId+1)
+        val receivedMessages = messageService.loadInboundMessagesFromSender(
+                senderId = thirdUserId,
+                startingId = 0,
+                limit = 3)
 
         assertThat(receivedMessages).isEmpty()
-
     }
 
-    @Test
-    fun `getReceivedMessages limits the results correctly as specified`() {
+    private fun findMaxId() = messageRepository.findAll().map { it.id }.max()!!
 
-        persistMessage(otherUser, currentUser)
-        persistMessage(otherUser, currentUser)
-        persistMessage(otherUser, currentUser)
-
-        val limit = 2
-        val receivedMessages = messageService.getReceivedMessages(limit = limit)
-
-        assertThat(receivedMessages).hasSize(limit)
-    }
-
-    private fun persistMessage(sender: User, receiver: User?) {
+    private fun persistMessage(text:String, sender: User, receiver: User?) {
         val message = make(a(DEFAULT_MESSAGE,
+                with(MESSAGE, text),
                 with(SENDER, sender),
                 with(RECEIVER, receiver)))
         messageRepository.save(message)
@@ -148,4 +185,13 @@ internal class MessageServiceIT {
                     currentTimeProvider = currentTimeProvider
         )
     }
+
+    data class ArgumentsForTestingLimitAndStartingId(
+            val totalMessagesCount: Int,
+            val startingIdProvider : () -> Long,
+            val limit: Int,
+            val expectedLoadedMessagesCount: Int
+    )
+
+
 }

@@ -1,5 +1,6 @@
 package com.micheledaros.messaging
 
+import com.micheledaros.messaging.configuration.SpringProfiles.H2DB
 import com.micheledaros.messaging.message.controller.dto.MessageDto
 import com.micheledaros.messaging.message.controller.dto.MessagesDto
 import com.micheledaros.messaging.message.controller.dto.PostMessageDto
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.ActiveProfiles
 
+@ActiveProfiles(H2DB)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class MessagingApplicationEndToEndTest {
@@ -67,14 +70,27 @@ class MessagingApplicationEndToEndTest {
 	}
 
 	@Test
+	fun `an user can see all the messages that he received from another user`() {
+		val sender = createUser("userA").id
+		val receiver = createUser("userB").id
+		val text = "text"
+		sendMessage(text, sender, receiver)
+
+		val receivedMessages = getReceivedMessagesFromASender(receiver, sender)
+		val messages = receivedMessages.messages
+		assertThat(messages).hasSize(1)
+		verifyMessage(messages[0], text, sender, receiver)
+	}
+
+	@Test
 	fun `an user can see all the messages that he sent`() {
 		val sender = createUser("userA").id
 		val receiver = createUser("userB").id
 		val text = "text"
 		sendMessage(text, sender, receiver)
 
-		val receivedMessages = getSentMessages(sender)
-		val messages = receivedMessages.messages
+		val sentMessages = getSentMessages(sender)
+		val messages = sentMessages.messages
 		assertThat(messages).hasSize(1)
 		verifyMessage(messages[0], text, sender, receiver)
 	}
@@ -116,6 +132,18 @@ class MessagingApplicationEndToEndTest {
 				.contentType(ContentType.JSON)
 				.header(userId_header, user)
 				.get("/messages/received")
+				.then()
+				.statusCode(200)
+				.extract()
+				.response()
+				.body.`as`<MessageDto>(MessagesDto::class.java) as MessagesDto
+	}
+
+	fun getReceivedMessagesFromASender(user: String, senderId:String) : MessagesDto {
+		return given()
+				.contentType(ContentType.JSON)
+				.header(userId_header, user)
+				.get("/messages/received?senderId=${senderId}")
 				.then()
 				.statusCode(200)
 				.extract()

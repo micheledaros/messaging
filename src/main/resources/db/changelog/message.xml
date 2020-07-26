@@ -15,7 +15,7 @@
         </preConditions>
 
         <createTable tableName="message_t">
-            <column autoIncrement="true" name="id" type="SERIAL">
+            <column autoIncrement="true" name="id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
             <column name="message" type="VARCHAR(4096)">

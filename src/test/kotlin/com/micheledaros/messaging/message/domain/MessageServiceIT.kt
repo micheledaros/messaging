@@ -29,8 +29,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.test.context.ActiveProfiles
 import java.util.stream.Stream
 
+@ActiveProfiles(SpringProfiles.H2DB, SpringProfiles.LIQUIBASE_OFF)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ActiveProfiles(SpringProfiles.LIQUIBASE_OFF)
 @DataJpaTest
 internal class MessageServiceIT {
 

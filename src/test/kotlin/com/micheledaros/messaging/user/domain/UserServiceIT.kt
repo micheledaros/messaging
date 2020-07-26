@@ -1,5 +1,6 @@
 package com.micheledaros.messaging.user.domain
 
+import com.micheledaros.messaging.configuration.SpringProfiles
 import com.micheledaros.messaging.configuration.SpringProfiles.LIQUIBASE_OFF
 import com.micheledaros.messaging.user.domain.UserMaker.DEFAULT_USER
 import com.micheledaros.messaging.user.domain.UserMaker.ID
@@ -14,7 +15,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.test.context.ActiveProfiles
 
-@ActiveProfiles(LIQUIBASE_OFF)
+@ActiveProfiles(SpringProfiles.H2DB, LIQUIBASE_OFF)
 @DataJpaTest
 internal class UserServiceIT {
 

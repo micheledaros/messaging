@@ -1,6 +1,8 @@
 package com.micheledaros.messaging.message.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.micheledaros.messaging.configuration.SpringProfiles.H2DB
+import com.micheledaros.messaging.configuration.SpringProfiles.LIQUIBASE_OFF
 import com.micheledaros.messaging.message.controller.MessageDtoMaker.DEFAULT_MESSAGE_DTO
 import com.micheledaros.messaging.message.controller.MessagesDtoMaker.DEFAULT_MESSAGES_DTO
 import com.micheledaros.messaging.message.controller.dto.PostMessageDto
@@ -28,10 +30,12 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 
+@ActiveProfiles(H2DB, LIQUIBASE_OFF)
 @WebMvcTest(MessageEndpoint::class)
 @Import(MessageEndpointConfiguration::class)
 internal class MessageEndpointIT (

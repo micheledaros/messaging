@@ -76,8 +76,6 @@ class MessageEndpoint (
             limit: Int,
             @RequestParam(required = false)
             startingId: Long?
-
-
     ) : MessagesDto{
 
         val messages =

@@ -1,6 +1,7 @@
 package com.micheledaros.messaging.user.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.micheledaros.messaging.configuration.SpringProfiles
 import com.micheledaros.messaging.user.domain.exception.UserAlreadyExistsException
 import com.micheledaros.messaging.user.domain.UserMaker.DEFAULT_USER
 import com.micheledaros.messaging.user.domain.UserService
@@ -17,10 +18,12 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 
+@ActiveProfiles(SpringProfiles.H2DB, SpringProfiles.LIQUIBASE_OFF)
 @WebMvcTest(UserEndpoint::class)
 @Import(UserEndpointTestConfiguration::class)
 internal class UserEndpointIT (

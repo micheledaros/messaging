@@ -6,6 +6,7 @@ import com.micheledaros.messaging.message.domain.exception.UnknownUserIdExceptio
 import com.micheledaros.messaging.security.CurrentUserIdProvider
 import com.micheledaros.messaging.user.domain.User
 import com.micheledaros.messaging.user.domain.UserRepository
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import java.util.Date
@@ -25,16 +26,11 @@ class MessageService (
 ) {
 
     fun sendMessage(text: String, receiverId: String) : Message{
-        val currentUserId =
-                currentUserIdProvider.get()
-                        ?:let { throw UnknownUserIdException() }
+        val currentUser = getCurrentUser()
 
-        if (currentUserId == receiverId) {
+        if (currentUser.id == receiverId) {
             throw ReceiverIsSameAsSenderException()
         }
-
-        val currentUser: User = userRepository.findById(currentUserId)
-                .orElseThrow{UnknownUserException(currentUserId)}
 
         val receiver: User = userRepository.findById(receiverId)
                 .orElseThrow{UnknownUserException(receiverId)}
@@ -47,6 +43,24 @@ class MessageService (
                     date = currentTimeProvider.get()
                 )
         )
+    }
+
+    fun getReceivedMessages(startingId:Long=0, limit:Int=50) : List<Message>{
+        val currentUser = getCurrentUser()
+        return  messageRepository.findAllByReceiverAndIdIsGreaterThanEqualOrderById(
+               currentUser,
+               startingId,
+               PageRequest.of(0,limit)
+        )
+    }
+
+    private fun getCurrentUser(): User {
+        val currentUserId =
+                currentUserIdProvider.get()
+                        ?: let { throw UnknownUserIdException() }
+
+        return userRepository.findById(currentUserId)
+                .orElseThrow { UnknownUserException(currentUserId) }
     }
 
 

@@ -1,5 +1,6 @@
 package com.micheledaros.messaging.message.domain
 
+import com.micheledaros.messaging.message.domain.MessageMaker.DEFAULT_MESSAGE
 import com.micheledaros.messaging.message.domain.exception.ReceiverIsSameAsSenderException
 import com.micheledaros.messaging.message.domain.exception.UnknownUserException
 import com.micheledaros.messaging.message.domain.exception.UnknownUserIdException
@@ -14,7 +15,6 @@ import com.natpryce.makeiteasy.MakeItEasy.make
 import com.natpryce.makeiteasy.MakeItEasy.with
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.assertj.core.api.Condition
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.AdditionalAnswers
@@ -26,6 +26,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.data.domain.PageRequest
 import java.util.Date
 import java.util.Optional
 
@@ -48,34 +49,34 @@ internal class MessageServiceTest {
     companion object {
         const val text = "hi there!"
         val currentTime = Date(1_595_714_631_751)
-        const val senderId = "sender_id"
-        const val receiverId = "receiver_id"
+        const val currentUserId = "sender_id"
+        const val otherUserId = "receiver_id"
 
-        private val sender = make(a(DEFAULT_USER,
-                with (ID, senderId), with(NICKNAME, "sender")))
-        private val receiver = make(a(DEFAULT_USER,
-                with (ID, receiverId), with(NICKNAME, "receiver")))
+        private val currentUser = make(a(DEFAULT_USER,
+                with (ID, currentUserId), with(NICKNAME, "sender")))
+        private val otherUser = make(a(DEFAULT_USER,
+                with (ID, otherUserId), with(NICKNAME, "receiver")))
 
     }
 
     @Test
     fun `sendMessage persists and returns a new message`() {
         doReturn(currentTime).`when`(currentTimeProvider).get()
-        doReturn(senderId).`when`(currentUserIdProvider).get()
-        doReturn(Optional.of(sender)).`when`(userRepository).findById(senderId)
-        doReturn(Optional.of(receiver)).`when`(userRepository).findById(receiverId)
+        doReturn(currentUserId).`when`(currentUserIdProvider).get()
+        doReturn(Optional.of(currentUser)).`when`(userRepository).findById(currentUserId)
+        doReturn(Optional.of(otherUser)).`when`(userRepository).findById(otherUserId)
         Mockito.`when`(messageRepository.save(ArgumentMatchers.any<Message>()))
                 .then(AdditionalAnswers.returnsFirstArg<User>())
 
-        val message = messageService.sendMessage(text, receiverId)
+        val message = messageService.sendMessage(text, otherUserId)
 
         verify(messageRepository).save(message)
 
         assertThat(message).isEqualToComparingFieldByField(
                 Message(
                         text,
-                        sender,
-                        receiver,
+                        currentUser,
+                        otherUser,
                         currentTime
                 ))
 
@@ -85,30 +86,31 @@ internal class MessageServiceTest {
     fun `sendMessage throws an exception if the current user id is not specified in the request`() {
 
         doReturn(null).`when`(currentUserIdProvider).get()
-        assertThatThrownBy { messageService.sendMessage(text, receiverId) }
+        assertThatThrownBy { messageService.sendMessage(text, otherUserId) }
                 .isInstanceOf(UnknownUserIdException::class.java)
 
     }
 
     @Test
-    fun `sendMessage throws an exeception if the receiver is the same as the current user`() {
+    fun `sendMessage throws an exception if the user specified in the request does not exist`() {
 
-        doReturn(senderId).`when`(currentUserIdProvider).get()
+        doReturn(currentUserId).`when`(currentUserIdProvider).get()
+        doReturn(Optional.empty<User>()).`when`(userRepository).findById(currentUserId)
 
-        assertThatThrownBy { messageService.sendMessage(text, senderId) }
-                .isInstanceOf(ReceiverIsSameAsSenderException::class.java)
+        assertThatThrownBy { messageService.sendMessage(text, otherUserId) }
+                .isEqualToComparingFieldByField(UnknownUserException(currentUserId))
 
         verifyNoInteractions(messageRepository)
     }
 
     @Test
-    fun `sendMessage throws an exeception if the user specified in the request does not exist`() {
+    fun `sendMessage throws an exception if the receiver is the same as the current user`() {
 
-        doReturn(senderId).`when`(currentUserIdProvider).get()
-        doReturn(Optional.empty<User>()).`when`(userRepository).findById(senderId)
+        doReturn(currentUserId).`when`(currentUserIdProvider).get()
+        doReturn(Optional.of(currentUser)).`when`(userRepository).findById(currentUserId)
 
-        assertThatThrownBy { messageService.sendMessage(text, receiverId) }
-                .isEqualToComparingFieldByField(UnknownUserException(senderId))
+        assertThatThrownBy { messageService.sendMessage(text, currentUserId) }
+                .isInstanceOf(ReceiverIsSameAsSenderException::class.java)
 
         verifyNoInteractions(messageRepository)
     }
@@ -116,14 +118,53 @@ internal class MessageServiceTest {
     @Test
     fun `sendMessage throws an exception if the receiver does not exist`() {
 
-        doReturn(senderId).`when`(currentUserIdProvider).get()
-        doReturn(Optional.empty<User>()).`when`(userRepository).findById(receiverId)
-        doReturn(Optional.of(sender)).`when`(userRepository).findById(senderId)
+        doReturn(currentUserId).`when`(currentUserIdProvider).get()
+        doReturn(Optional.empty<User>()).`when`(userRepository).findById(otherUserId)
+        doReturn(Optional.of(currentUser)).`when`(userRepository).findById(currentUserId)
 
-        assertThatThrownBy { messageService.sendMessage(text, receiverId) }
-                .isEqualToComparingFieldByField(UnknownUserException(receiverId))
+        assertThatThrownBy { messageService.sendMessage(text, otherUserId) }
+                .isEqualToComparingFieldByField(UnknownUserException(otherUserId))
 
         verifyNoInteractions(messageRepository)
+    }
+
+    @Test
+    fun `getReceivedMessages returns the correct messages` () {
+        doReturn(currentUserId).`when`(currentUserIdProvider).get()
+        doReturn(Optional.of(currentUser)).`when`(userRepository).findById(currentUserId)
+
+        val message = make(a(DEFAULT_MESSAGE))
+
+        val startingId: Long = 2
+        val limit = 3
+
+        doReturn(listOf(message))
+                .`when`(messageRepository)
+                .findAllByReceiverAndIdIsGreaterThanEqualOrderById(currentUser, startingId, PageRequest.of(0, limit))
+
+        val receivedMessages = messageService.getReceivedMessages(startingId, limit)
+
+        assertThat(receivedMessages).containsExactly(message)
+    }
+
+    @Test
+    fun `getReceivedMessages throws an exception if the current user id is not specified in the request`() {
+
+        doReturn(null).`when`(currentUserIdProvider).get()
+        assertThatThrownBy { messageService.getReceivedMessages() }
+                .isInstanceOf(UnknownUserIdException::class.java)
+
+    }
+
+    @Test
+    fun `getReceivedMessages throws an exception if the user specified in the request does not exist`() {
+
+        doReturn(currentUserId).`when`(currentUserIdProvider).get()
+        doReturn(Optional.empty<User>()).`when`(userRepository).findById(currentUserId)
+
+        assertThatThrownBy { messageService.getReceivedMessages() }
+                .isEqualToComparingFieldByField(UnknownUserException(currentUserId))
+
     }
 
 }

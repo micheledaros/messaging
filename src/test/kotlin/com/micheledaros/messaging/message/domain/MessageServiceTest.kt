@@ -106,7 +106,7 @@ internal class MessageServiceTest {
 
         doReturn(listOf(message))
                 .`when`(messageRepository)
-                .findAllByReceiverAndIdIsGreaterThanOrderById(currentUser, startingId, PageRequest.of(0, limit))
+                .findAllByReceiverAndIdIsGreaterThanOrderByIdDesc(currentUser, startingId, PageRequest.of(0, limit))
 
         val receivedMessages = messageService.loadReceivedMessages(startingId, limit)
 
@@ -120,7 +120,7 @@ internal class MessageServiceTest {
         messageService.loadReceivedMessages()
 
         verify(messageRepository)
-                .findAllByReceiverAndIdIsGreaterThanOrderById(currentUser, -1, PageRequest.of(0, 50))
+                .findAllByReceiverAndIdIsGreaterThanOrderByIdDesc(currentUser, -1, PageRequest.of(0, 50))
     }
 
     @Test
@@ -132,7 +132,7 @@ internal class MessageServiceTest {
 
         doReturn(listOf(message))
                 .`when`(messageRepository)
-                .findAllByReceiverAndSenderAndIdIsGreaterThanOrderById(currentUser, otherUser, startingId, PageRequest.of(0, limit))
+                .findAllByReceiverAndSenderAndIdIsGreaterThanOrderByIdDesc(currentUser, otherUser, startingId, PageRequest.of(0, limit))
 
         val receivedMessages = messageService.loadReceivedMessagesFromSender(otherUserId, startingId, limit)
 
@@ -156,7 +156,7 @@ internal class MessageServiceTest {
         messageService.loadReceivedMessagesFromSender(otherUserId)
 
         verify(messageRepository)
-                .findAllByReceiverAndSenderAndIdIsGreaterThanOrderById(currentUser, otherUser, -1, PageRequest.of(0, 50))
+                .findAllByReceiverAndSenderAndIdIsGreaterThanOrderByIdDesc(currentUser, otherUser, -1, PageRequest.of(0, 50))
     }
 
     @Test
@@ -166,8 +166,8 @@ internal class MessageServiceTest {
         val limit = 3
 
         doReturn(listOf(message))
-                 .`when`(messageRepository)
-                .findAllBySenderAndIdIsGreaterThanOrderById(currentUser, startingId, PageRequest.of(0, limit))
+                .`when`(messageRepository)
+                .findAllBySenderAndIdIsGreaterThanOrderByIdDesc(currentUser, startingId, PageRequest.of(0, limit))
 
         val receivedMessages = messageService.loadSentMessages(startingId, limit)
 
@@ -181,7 +181,7 @@ internal class MessageServiceTest {
         messageService.loadSentMessages()
 
         verify(messageRepository)
-                .findAllBySenderAndIdIsGreaterThanOrderById(currentUser, -1, PageRequest.of(0, 50))
+                .findAllBySenderAndIdIsGreaterThanOrderByIdDesc(currentUser, -1, PageRequest.of(0, 50))
     }
 
 }

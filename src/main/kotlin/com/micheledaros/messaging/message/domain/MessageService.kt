@@ -44,10 +44,10 @@ class MessageService(
 
     fun loadReceivedMessages(startingId:Long?= null, limit:Int?= null) : List<Message>{
         val currentUser = userService.loadCurrentUser()
-        return  messageRepository.findAllByReceiverAndIdIsGreaterThanOrderById(
-               currentUser,
-               startingId?:MIN_POSSIBLE_MESSAGE_ID,
-               PageRequest.of(0,limit?: DEFAULT_MESSAGE_LIMIT)
+        return messageRepository.findAllByReceiverAndIdIsGreaterThanOrderByIdDesc(
+                currentUser,
+                startingId ?: MIN_POSSIBLE_MESSAGE_ID,
+                PageRequest.of(0, limit ?: DEFAULT_MESSAGE_LIMIT)
         )
     }
 
@@ -60,20 +60,20 @@ class MessageService(
 
         val sender: User = userService.loadUser(senderId)
 
-        return  messageRepository.findAllByReceiverAndSenderAndIdIsGreaterThanOrderById(
+        return messageRepository.findAllByReceiverAndSenderAndIdIsGreaterThanOrderByIdDesc(
                 receiver = currentUser,
                 sender = sender,
-                startingId = startingId?:MIN_POSSIBLE_MESSAGE_ID,
-                pageable = PageRequest.of(0,limit?: DEFAULT_MESSAGE_LIMIT)
+                startingId = startingId ?: MIN_POSSIBLE_MESSAGE_ID,
+                pageable = PageRequest.of(0, limit ?: DEFAULT_MESSAGE_LIMIT)
         )
     }
 
     fun loadSentMessages(startingId:Long?= null, limit:Int?=null) : List<Message> {
         val currentUser = userService.loadCurrentUser()
-        return  messageRepository.findAllBySenderAndIdIsGreaterThanOrderById(
+        return messageRepository.findAllBySenderAndIdIsGreaterThanOrderByIdDesc(
                 currentUser,
-                startingId?:MIN_POSSIBLE_MESSAGE_ID,
-                PageRequest.of(0,limit?: DEFAULT_MESSAGE_LIMIT)
+                startingId ?: MIN_POSSIBLE_MESSAGE_ID,
+                PageRequest.of(0, limit ?: DEFAULT_MESSAGE_LIMIT)
         )
     }
 }

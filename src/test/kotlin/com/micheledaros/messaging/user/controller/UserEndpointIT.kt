@@ -1,4 +1,4 @@
-package com.micheledaros.messaging.user.rest
+package com.micheledaros.messaging.user.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.micheledaros.messaging.user.domain.exception.UserAlreadyExistsException
@@ -15,7 +15,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc

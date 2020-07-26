@@ -27,9 +27,6 @@
             <column name="receiver_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
             </column>
-            <column name="created_at" type="DATETIME">
-                <constraints nullable="false"/>
-            </column>
         </createTable>
 
         <addPrimaryKey tableName="message_t" columnNames="id"/>

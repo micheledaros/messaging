@@ -8,17 +8,17 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import java.util.Date
 
-@Component
-class CurrentTimeProvider {
-    fun get() = Date()
-}
 
 @Service
 class MessageService (
         val messageRepository: MessageRepository,
-        val currentTimeProvider: CurrentTimeProvider,
         val userService: UserService
 ) {
+
+    companion object {
+        private const val MIN_POSSIBLE_MESSAGE_ID = -1L
+        private const val DEFAULT_MESSAGE_LIMIT = 50
+    }
 
     fun sendMessage(text: String, receiverId: String) : Message{
         val currentUser = userService.loadCurrentUser()
@@ -33,22 +33,21 @@ class MessageService (
                 Message(
                     message = text,
                     sender = currentUser,
-                    receiver = receiver,
-                    date = currentTimeProvider.get()
+                    receiver = receiver
                 )
         )
     }
 
-    fun loadInboundMessages(startingId:Long=-1, limit:Int=50) : List<Message>{
+    fun loadReceivedMessages(startingId:Long?= null, limit:Int?= null) : List<Message>{
         val currentUser = userService.loadCurrentUser()
         return  messageRepository.findAllByReceiverAndIdIsGreaterThanOrderById(
                currentUser,
-               startingId,
-               PageRequest.of(0,limit)
+               startingId?:MIN_POSSIBLE_MESSAGE_ID,
+               PageRequest.of(0,limit?: DEFAULT_MESSAGE_LIMIT)
         )
     }
 
-    fun loadInboundMessagesFromSender(senderId: String, startingId:Long=-1, limit:Int=50) : List<Message>{
+    fun loadReceivedMessagesFromSender(senderId: String, startingId:Long?= null, limit:Int? = null) : List<Message>{
         val currentUser = userService.loadCurrentUser()
 
         if (currentUser.id == senderId) {
@@ -60,17 +59,17 @@ class MessageService (
         return  messageRepository.findAllByReceiverAndSenderAndIdIsGreaterThanOrderById(
                 receiver = currentUser,
                 sender = sender,
-                startingId = startingId,
-                pageable = PageRequest.of(0,limit)
+                startingId = startingId?:MIN_POSSIBLE_MESSAGE_ID,
+                pageable = PageRequest.of(0,limit?: DEFAULT_MESSAGE_LIMIT)
         )
     }
 
-    fun loadOutboundMessages(startingId:Long=-1, limit:Int=50) : List<Message> {
+    fun loadSentMessages(startingId:Long?= null, limit:Int?=null) : List<Message> {
         val currentUser = userService.loadCurrentUser()
         return  messageRepository.findAllBySenderAndIdIsGreaterThanOrderById(
                 currentUser,
-                startingId,
-                PageRequest.of(0,limit)
+                startingId?:MIN_POSSIBLE_MESSAGE_ID,
+                PageRequest.of(0,limit?: DEFAULT_MESSAGE_LIMIT)
         )
     }
 }

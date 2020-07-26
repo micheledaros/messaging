@@ -26,10 +26,7 @@ data class Message (
 
         @ManyToOne
         @JoinColumn(name = "receiver_id", referencedColumnName = "id", nullable = false)
-        val receiver: User,
-
-        @Column(name = "created_ad", nullable = false)
-        val date: Date
+        val receiver: User
 ) {
         @Id
         @Column(name = "id")

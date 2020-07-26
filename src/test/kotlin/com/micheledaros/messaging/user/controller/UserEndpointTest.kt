@@ -1,10 +1,11 @@
-package com.micheledaros.messaging.user.rest
+package com.micheledaros.messaging.user.controller
 
 import com.micheledaros.messaging.user.domain.exception.UserAlreadyExistsException
 import com.micheledaros.messaging.user.domain.UserMaker
 import com.micheledaros.messaging.user.domain.UserMaker.DEFAULT_USER
 import com.micheledaros.messaging.user.domain.UserService
-import com.micheledaros.messaging.user.rest.UserDtoMaker.DEFAULT_USERDTO
+import com.micheledaros.messaging.user.controller.UserDtoMaker.DEFAULT_USERDTO
+import com.micheledaros.messaging.user.controller.dto.UserErrorDto
 import com.natpryce.makeiteasy.MakeItEasy.a
 import com.natpryce.makeiteasy.MakeItEasy.make
 import com.natpryce.makeiteasy.MakeItEasy.with

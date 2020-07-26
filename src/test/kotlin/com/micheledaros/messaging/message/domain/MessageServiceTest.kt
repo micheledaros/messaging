@@ -33,8 +33,6 @@ internal class MessageServiceTest {
     private lateinit var messageRepository: MessageRepository
     @Mock
     private lateinit var userService: UserService
-    @Mock
-    private lateinit var currentTimeProvider: CurrentTimeProvider
 
     @InjectMocks
     private lateinit var messageService: MessageService
@@ -57,7 +55,6 @@ internal class MessageServiceTest {
 
     @Test
     fun `sendMessage persists and returns a new message`() {
-        doReturn(currentTime).`when`(currentTimeProvider).get()
         doReturn(currentUser).`when`(userService).loadCurrentUser()
         doReturn(otherUser).`when`(userService).loadUser(otherUserId)
         Mockito.`when`(messageRepository.save(ArgumentMatchers.any<Message>()))
@@ -71,8 +68,7 @@ internal class MessageServiceTest {
                 Message(
                         text,
                         currentUser,
-                        otherUser,
-                        currentTime
+                        otherUser
                 ))
     }
 
@@ -95,7 +91,7 @@ internal class MessageServiceTest {
                 .`when`(messageRepository)
                 .findAllByReceiverAndIdIsGreaterThanOrderById(currentUser, startingId, PageRequest.of(0, limit))
 
-        val receivedMessages = messageService.loadInboundMessages(startingId, limit)
+        val receivedMessages = messageService.loadReceivedMessages(startingId, limit)
 
         assertThat(receivedMessages).containsExactly(message)
     }
@@ -104,7 +100,7 @@ internal class MessageServiceTest {
     fun `loadInboundMessages has the right default parameters` () {
         doReturn(currentUser).`when`(userService).loadCurrentUser()
 
-        messageService.loadInboundMessages()
+        messageService.loadReceivedMessages()
 
         verify(messageRepository)
                 .findAllByReceiverAndIdIsGreaterThanOrderById(currentUser, -1, PageRequest.of(0, 50))
@@ -121,7 +117,7 @@ internal class MessageServiceTest {
                 .`when`(messageRepository)
                 .findAllByReceiverAndSenderAndIdIsGreaterThanOrderById(currentUser, otherUser, startingId, PageRequest.of(0, limit))
 
-        val receivedMessages = messageService.loadInboundMessagesFromSender(otherUserId, startingId, limit)
+        val receivedMessages = messageService.loadReceivedMessagesFromSender(otherUserId, startingId, limit)
 
         assertThat(receivedMessages).containsExactly(message)
     }
@@ -131,7 +127,7 @@ internal class MessageServiceTest {
     fun `loadInboundMessagesFromSender from self throws an exception` () {
         doReturn(currentUser).`when`(userService).loadCurrentUser()
 
-        assertThatThrownBy { messageService.loadInboundMessagesFromSender(currentUserId) }
+        assertThatThrownBy { messageService.loadReceivedMessagesFromSender(currentUserId) }
                 .isInstanceOf(ReceiverIsSameAsSenderException::class.java)
     }
 
@@ -140,7 +136,7 @@ internal class MessageServiceTest {
         doReturn(currentUser).`when`(userService).loadCurrentUser()
         doReturn(otherUser).`when`(userService).loadUser(otherUserId)
 
-        messageService.loadInboundMessagesFromSender(otherUserId)
+        messageService.loadReceivedMessagesFromSender(otherUserId)
 
         verify(messageRepository)
                 .findAllByReceiverAndSenderAndIdIsGreaterThanOrderById(currentUser, otherUser, -1, PageRequest.of(0, 50))
@@ -156,7 +152,7 @@ internal class MessageServiceTest {
                  .`when`(messageRepository)
                 .findAllBySenderAndIdIsGreaterThanOrderById(currentUser, startingId, PageRequest.of(0, limit))
 
-        val receivedMessages = messageService.loadOutboundMessages(startingId, limit)
+        val receivedMessages = messageService.loadSentMessages(startingId, limit)
 
         assertThat(receivedMessages).containsExactly(message)
     }
@@ -165,7 +161,7 @@ internal class MessageServiceTest {
     fun `loadOutboundMessages has the right default parameters` () {
         doReturn(currentUser).`when`(userService).loadCurrentUser()
 
-        messageService.loadOutboundMessages()
+        messageService.loadSentMessages()
 
         verify(messageRepository)
                 .findAllBySenderAndIdIsGreaterThanOrderById(currentUser, -1, PageRequest.of(0, 50))

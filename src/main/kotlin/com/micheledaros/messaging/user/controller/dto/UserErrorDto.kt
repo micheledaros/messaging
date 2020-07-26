@@ -1,4 +1,4 @@
-package com.micheledaros.messaging.user.rest
+package com.micheledaros.messaging.user.controller.dto
 
 data class UserErrorDto(
     val message: String,

@@ -1,4 +1,4 @@
-package com.micheledaros.messaging.user.rest
+package com.micheledaros.messaging.user.controller.dto
 
 data class UserDto (
         val id: String,

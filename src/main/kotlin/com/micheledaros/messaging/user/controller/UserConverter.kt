@@ -1,8 +1,8 @@
-package com.micheledaros.messaging.user.rest
+package com.micheledaros.messaging.user.controller
 
+import com.micheledaros.messaging.user.controller.dto.UserDto
 import com.micheledaros.messaging.user.domain.User
 import org.springframework.stereotype.Component
-import org.springframework.stereotype.Service
 
 @Component
 class UserConverter() {

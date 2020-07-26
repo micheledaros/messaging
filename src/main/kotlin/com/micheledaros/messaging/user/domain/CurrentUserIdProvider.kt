@@ -11,10 +11,14 @@ interface CurrentUserIdProvider {
 @Service
 class CurrentRestUserIdProvider : CurrentUserIdProvider {
 
+    companion object {
+        const val USER_ID_HEADER = "userid"
+    }
+
     override fun get() : String?{
         return (RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes)
                 ?.request
-                ?.getHeader("userid")
+                ?.getHeader(USER_ID_HEADER)
     }
 
 }

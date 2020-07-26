@@ -27,7 +27,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.test.context.ActiveProfiles
-import java.util.Date
 import java.util.stream.Stream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -45,15 +44,11 @@ internal class MessageServiceIT {
     private lateinit var currentUserIdProvider: CurrentUserIdProvider
 
     @Autowired
-    private lateinit var currentTimeProvider: CurrentTimeProvider
-
-    @Autowired
     private lateinit var messageService: MessageService
 
 
 
     companion object {
-        private val currentTime = Date(1_595_714_631_751)
         private const val currentUserId = "currentUser_id"
         private const val otherUserId = "otherUserId"
 
@@ -87,7 +82,7 @@ internal class MessageServiceIT {
         (1..arguments.totalMessagesCount).forEach{persistMessage("message${it}", otherUser, currentUser)}
 
         val startingId = arguments.startingIdProvider.invoke()
-        val receivedMessages = messageService.loadInboundMessages(startingId = startingId, limit = arguments.limit)
+        val receivedMessages = messageService.loadReceivedMessages(startingId = startingId, limit = arguments.limit)
 
         assertThat(receivedMessages).hasSize(arguments.expectedLoadedMessagesCount)
     }
@@ -98,7 +93,7 @@ internal class MessageServiceIT {
         (1..arguments.totalMessagesCount).forEach{persistMessage("message${it}", otherUser, currentUser)}
 
         val startingId = arguments.startingIdProvider.invoke()
-        val receivedMessages = messageService.loadInboundMessagesFromSender(
+        val receivedMessages = messageService.loadReceivedMessagesFromSender(
                 senderId = otherUserId,
                 startingId = startingId,
                 limit = arguments.limit)
@@ -112,7 +107,7 @@ internal class MessageServiceIT {
         (1..arguments.totalMessagesCount).forEach{persistMessage("message${it}", currentUser, otherUser)}
 
         val startingId = arguments.startingIdProvider.invoke()
-        val receivedMessages = messageService.loadOutboundMessages(
+        val receivedMessages = messageService.loadSentMessages(
                 startingId = startingId,
                 limit = arguments.limit)
 
@@ -136,7 +131,7 @@ internal class MessageServiceIT {
         userRepository.save(thirdUser)
         persistMessage("message1}", otherUser, currentUser)
 
-        val receivedMessages = messageService.loadInboundMessagesFromSender(
+        val receivedMessages = messageService.loadReceivedMessagesFromSender(
                 senderId = thirdUserId,
                 startingId = 0,
                 limit = 3)
@@ -158,11 +153,6 @@ internal class MessageServiceIT {
     class MessageServiceITConfiguration {
 
         @Bean
-        fun currentTimeProvider () = object : CurrentTimeProvider (){
-            override fun get () : Date {return currentTime}
-        }
-
-        @Bean
         fun currentUserIdProvider () = object : CurrentUserIdProvider {
             override fun get () : String {return currentUserId}
         }
@@ -177,12 +167,10 @@ internal class MessageServiceIT {
         fun messageService(
                 messageRepository: MessageRepository,
                 userService: UserService,
-                currentUserIdProvider: CurrentUserIdProvider,
-                currentTimeProvider: CurrentTimeProvider
+                currentUserIdProvider: CurrentUserIdProvider
                 ) = MessageService(
                     messageRepository = messageRepository,
-                    userService = userService,
-                    currentTimeProvider = currentTimeProvider
+                    userService = userService
         )
     }
 

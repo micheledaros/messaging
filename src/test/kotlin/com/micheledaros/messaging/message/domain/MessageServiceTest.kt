@@ -1,5 +1,6 @@
 package com.micheledaros.messaging.message.domain
 
+import com.micheledaros.messaging.infrastructure.queuing.QueuingService
 import com.micheledaros.messaging.message.domain.MessageMaker.DEFAULT_MESSAGE
 import com.micheledaros.messaging.message.domain.exception.ReceiverIsSameAsSenderException
 import com.micheledaros.messaging.user.domain.User
@@ -31,8 +32,12 @@ internal class MessageServiceTest {
 
     @Mock
     private lateinit var messageRepository: MessageRepository
+
     @Mock
     private lateinit var userService: UserService
+
+    @Mock
+    private lateinit var queuingService: QueuingService
 
     @InjectMocks
     private lateinit var messageService: MessageService
@@ -70,6 +75,18 @@ internal class MessageServiceTest {
                         currentUser,
                         otherUser
                 ))
+    }
+
+    @Test
+    fun `sendMessage sends a message to a queue`() {
+        doReturn(currentUser).`when`(userService).loadCurrentUser()
+        doReturn(otherUser).`when`(userService).loadUser(otherUserId)
+        Mockito.`when`(messageRepository.save(ArgumentMatchers.any<Message>()))
+                .then(AdditionalAnswers.returnsFirstArg<User>())
+
+        val message = messageService.sendMessage(text, otherUserId)
+
+        verify(queuingService).sendMessage(message)
     }
 
     @Test

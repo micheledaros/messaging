@@ -1,19 +1,19 @@
 package com.micheledaros.messaging.message.domain
 
+import com.micheledaros.messaging.infrastructure.queuing.QueuingService
 import com.micheledaros.messaging.message.domain.exception.ReceiverIsSameAsSenderException
 import com.micheledaros.messaging.user.domain.User
 import com.micheledaros.messaging.user.domain.UserService
 import org.springframework.data.domain.PageRequest
-import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
-import java.util.Date
 import javax.transaction.Transactional
 
 
 @Service
-class MessageService (
+class MessageService(
         val messageRepository: MessageRepository,
-        val userService: UserService
+        val userService: UserService,
+        val queuingService: QueuingService
 ) {
 
     companion object {
@@ -31,13 +31,15 @@ class MessageService (
 
         val receiver: User = userService.loadUser(receiverId)
 
-        return messageRepository.save(
+        val message = messageRepository.save(
                 Message(
-                    message = text,
-                    sender = currentUser,
-                    receiver = receiver
+                        message = text,
+                        sender = currentUser,
+                        receiver = receiver
                 )
         )
+        queuingService.sendMessage(message)
+        return message
     }
 
     fun loadReceivedMessages(startingId:Long?= null, limit:Int?= null) : List<Message>{

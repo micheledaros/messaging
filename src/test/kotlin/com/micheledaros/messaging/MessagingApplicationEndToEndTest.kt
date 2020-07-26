@@ -1,6 +1,7 @@
 package com.micheledaros.messaging
 
 import com.micheledaros.messaging.configuration.SpringProfiles.H2DB
+import com.micheledaros.messaging.infrastructure.queuing.QueuingService
 import com.micheledaros.messaging.message.controller.dto.MessageDto
 import com.micheledaros.messaging.message.controller.dto.MessagesDto
 import com.micheledaros.messaging.message.controller.dto.PostMessageDto
@@ -13,6 +14,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
@@ -22,8 +24,10 @@ import org.springframework.test.context.ActiveProfiles
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class MessagingApplicationEndToEndTest {
 
-	private val userId_header = "userid"
+	private val USERID_HEADER = "userid"
 
+	@MockBean
+	private lateinit var queuingService: QueuingService
 
 	@LocalServerPort
 	var port = 0
@@ -117,7 +121,7 @@ class MessagingApplicationEndToEndTest {
 	fun sendMessage(message: String, sender:String, receiver:String) : MessageDto{
 		return given()
 				.contentType(ContentType.JSON)
-				.header(userId_header, sender)
+				.header(USERID_HEADER, sender)
 				.body(PostMessageDto(message, receiver))
 				.post("/messages/")
 				.then()
@@ -130,7 +134,7 @@ class MessagingApplicationEndToEndTest {
 	fun getReceivedMessages(user: String) : MessagesDto {
 		return given()
 				.contentType(ContentType.JSON)
-				.header(userId_header, user)
+				.header(USERID_HEADER, user)
 				.get("/messages/received")
 				.then()
 				.statusCode(200)
@@ -142,7 +146,7 @@ class MessagingApplicationEndToEndTest {
 	fun getReceivedMessagesFromASender(user: String, senderId:String) : MessagesDto {
 		return given()
 				.contentType(ContentType.JSON)
-				.header(userId_header, user)
+				.header(USERID_HEADER, user)
 				.get("/messages/received?senderId=${senderId}")
 				.then()
 				.statusCode(200)
@@ -154,7 +158,7 @@ class MessagingApplicationEndToEndTest {
 	fun getSentMessages(user: String) : MessagesDto {
 		return given()
 				.contentType(ContentType.JSON)
-				.header(userId_header, user)
+				.header(USERID_HEADER, user)
 				.get("/messages/sent")
 				.then()
 				.statusCode(200)

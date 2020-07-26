@@ -1,3 +1,6 @@
-
 #comment out this line in a production environment, to disable swagger
 spring.profiles.active: development
+
+queuing:
+  topicExchaneName: messages
+  routingKey: routing.key

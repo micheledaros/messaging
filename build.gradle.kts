@@ -35,6 +35,7 @@ dependencies {
 
 	implementation("io.springfox:springfox-swagger2:2.9.2")
 	implementation("io.springfox:springfox-swagger-ui:2.9.2")
+	implementation("org.springframework.boot:spring-boot-starter-amqp")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -45,7 +46,7 @@ dependencies {
 	testImplementation("io.rest-assured:json-path:4.2.0")
 	testImplementation("io.rest-assured:xml-path:4.2.0")
 	testImplementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.11.1")
-
+	testImplementation("org.springframework.amqp:spring-rabbit-test")
 
 }
 

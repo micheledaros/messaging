@@ -1,7 +1,6 @@
 package com.micheledaros.messaging.infrastructure
 
 import com.micheledaros.messaging.user.domain.CurrentRestUserIdProvider.Companion.USER_ID_HEADER
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -11,7 +10,6 @@ import springfox.documentation.schema.ModelRef
 import springfox.documentation.spi.DocumentationType
 import springfox.documentation.spring.web.plugins.Docket
 import springfox.documentation.swagger2.annotations.EnableSwagger2
-import java.net.URI
 
 /**
  * Swagger UI is available at http://localhost:8080/swagger-ui.html
@@ -20,6 +18,7 @@ import java.net.URI
 @Profile("development")
 @EnableSwagger2
 class SwaggerConfig() {
+
     @Bean
     fun productApi(): Docket {
 

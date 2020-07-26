@@ -1,6 +1,7 @@
 package com.micheledaros.messaging.message.domain
 
 import com.micheledaros.messaging.configuration.SpringProfiles
+import com.micheledaros.messaging.infrastructure.queuing.QueuingService
 import com.micheledaros.messaging.message.domain.MessageMaker.DEFAULT_MESSAGE
 import com.micheledaros.messaging.message.domain.MessageMaker.MESSAGE
 import com.micheledaros.messaging.message.domain.MessageMaker.RECEIVER
@@ -46,7 +47,8 @@ internal class MessageServiceIT {
     @Autowired
     private lateinit var messageService: MessageService
 
-
+    @Autowired
+    private lateinit var queuingService: QueuingService
 
     companion object {
         private const val currentUserId = "currentUser_id"
@@ -54,9 +56,9 @@ internal class MessageServiceIT {
 
 
         private val currentUser = make(a(DEFAULT_USER,
-                with (ID, currentUserId), with(NICKNAME, "currentUser")))
+                with(ID, currentUserId), with(NICKNAME, "currentUser")))
         private val otherUser = make(a(DEFAULT_USER,
-                with (ID, otherUserId), with(NICKNAME, "otherUser")))
+                with(ID, otherUserId), with(NICKNAME, "otherUser")))
     }
 
     @BeforeEach
@@ -167,11 +169,20 @@ internal class MessageServiceIT {
         fun messageService(
                 messageRepository: MessageRepository,
                 userService: UserService,
-                currentUserIdProvider: CurrentUserIdProvider
-                ) = MessageService(
-                    messageRepository = messageRepository,
-                    userService = userService
+                currentUserIdProvider: CurrentUserIdProvider,
+                queuingService: QueuingService
+        ) = MessageService(
+                messageRepository = messageRepository,
+                userService = userService,
+                queuingService = queuingService
         )
+
+        @Bean
+        fun queuingService() = object : QueuingService {
+            override fun sendMessage(message: Message) {
+
+            }
+        }
     }
 
     data class ArgumentsForTestingLimitAndStartingId(

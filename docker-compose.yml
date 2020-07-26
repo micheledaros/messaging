@@ -8,6 +8,7 @@ services:
       - "8080:8080"
     depends_on:
       - dbpostgresql
+      - rabbitmq
     environment:
       - spring_datasource_url=${DATASOURCE_URL}
       - spring_datasource_username=${DATASOURCE_USERNAME}
@@ -22,3 +23,9 @@ services:
       - POSTGRES_PASSWORD=${DATASOURCE_PASSWORD}
       - POSTGRES_USER=${DATASOURCE_USERNAME}
       - POSTGRES_DB=${DATASOURCE_DB}
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"

@@ -41,6 +41,11 @@ dependencies {
 	}
 	testImplementation("org.assertj:assertj-core:3.16.1")
 	testImplementation("com.natpryce:make-it-easy:4.0.1")
+	testImplementation("io.rest-assured:rest-assured:4.2.0")
+	testImplementation("io.rest-assured:json-path:4.2.0")
+	testImplementation("io.rest-assured:xml-path:4.2.0")
+	testImplementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.11.1")
+
 
 }
 

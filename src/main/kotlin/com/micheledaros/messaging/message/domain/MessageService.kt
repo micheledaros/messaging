@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import java.util.Date
+import javax.transaction.Transactional
 
 
 @Service
@@ -20,6 +21,7 @@ class MessageService (
         private const val DEFAULT_MESSAGE_LIMIT = 50
     }
 
+    @Transactional
     fun sendMessage(text: String, receiverId: String) : Message{
         val currentUser = userService.loadCurrentUser()
 

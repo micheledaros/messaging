@@ -2,5 +2,5 @@
 spring.profiles.active: development
 
 queuing:
-  topicExchaneName: messages
+  topicExchangeName: messages
   routingKey: routing.key

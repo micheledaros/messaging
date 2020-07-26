@@ -4,12 +4,13 @@ import com.micheledaros.messaging.configuration.SpringProfiles
 import com.micheledaros.messaging.message.domain.MessageMaker.DEFAULT_MESSAGE
 import com.micheledaros.messaging.message.domain.MessageMaker.RECEIVER
 import com.micheledaros.messaging.message.domain.MessageMaker.SENDER
-import com.micheledaros.messaging.security.CurrentUserIdProvider
+import com.micheledaros.messaging.user.domain.CurrentUserIdProvider
 import com.micheledaros.messaging.user.domain.User
 import com.micheledaros.messaging.user.domain.UserMaker.DEFAULT_USER
 import com.micheledaros.messaging.user.domain.UserMaker.ID
 import com.micheledaros.messaging.user.domain.UserMaker.NICKNAME
 import com.micheledaros.messaging.user.domain.UserRepository
+import com.micheledaros.messaging.user.domain.UserService
 import com.natpryce.makeiteasy.MakeItEasy.a
 import com.natpryce.makeiteasy.MakeItEasy.make
 import com.natpryce.makeiteasy.MakeItEasy.with
@@ -44,9 +45,9 @@ internal class MessageServiceIT {
 
 
     companion object {
-        val currentTime = Date(1_595_714_631_751)
-        val currentUserId = "currentUser_id"
-        val otherUserId = "otherUserId"
+        private val currentTime = Date(1_595_714_631_751)
+        private const val currentUserId = "currentUser_id"
+        private const val otherUserId = "otherUserId"
 
         private val currentUser = make(a(DEFAULT_USER,
                 with (ID, currentUserId), with(NICKNAME, "currentUser")))
@@ -130,15 +131,20 @@ internal class MessageServiceIT {
         }
 
         @Bean
+        fun userservice(
+                userRepository: UserRepository,
+                currentUserIdProvider: CurrentUserIdProvider): UserService =
+                UserService(userRepository, currentUserIdProvider)
+
+        @Bean
         fun messageService(
                 messageRepository: MessageRepository,
-                userRepository: UserRepository,
+                userService: UserService,
                 currentUserIdProvider: CurrentUserIdProvider,
                 currentTimeProvider: CurrentTimeProvider
                 ) = MessageService(
                     messageRepository = messageRepository,
-                    userRepository = userRepository,
-                    currentUserIdProvider = currentUserIdProvider,
+                    userService = userService,
                     currentTimeProvider = currentTimeProvider
         )
     }

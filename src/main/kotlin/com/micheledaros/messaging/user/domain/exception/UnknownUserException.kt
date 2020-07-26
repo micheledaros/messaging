@@ -1,3 +1,3 @@
-package com.micheledaros.messaging.message.domain.exception
+package com.micheledaros.messaging.user.domain.exception
 
 class UnknownUserException (val id: String): RuntimeException()

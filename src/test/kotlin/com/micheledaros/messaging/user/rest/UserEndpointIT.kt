@@ -12,6 +12,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -69,7 +70,7 @@ internal class UserEndpointIT (
 
 }
 
-@Configuration
+@TestConfiguration
 class UserEndpointTestConfiguration {
 
     @Bean

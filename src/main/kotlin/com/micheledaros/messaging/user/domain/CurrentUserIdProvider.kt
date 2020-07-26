@@ -1,4 +1,4 @@
-package com.micheledaros.messaging.security
+package com.micheledaros.messaging.user.domain
 
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
